@@ -244,7 +244,7 @@ impl<'env> Scope<'env> {
     /// ```
     pub fn spawn<'scope, F, T>(&'scope self, f: F) -> ScopedJoinHandle<'scope, T>
     where
-        F: FnOnce(&Scope<'env>) -> T,
+        F: FnOnce(Arc<Scope<'env>>) -> T,
         F: Send + 'env,
         T: Send + 'env,
     {
@@ -409,7 +409,7 @@ impl<'scope, 'env> ScopedThreadBuilder<'scope, 'env> {
     /// ```
     pub fn spawn<F, T>(self, f: F) -> io::Result<ScopedJoinHandle<'scope, T>>
     where
-        F: FnOnce(&Scope<'env>) -> T,
+        F: FnOnce(Arc<Scope<'env>>) -> T,
         F: Send + 'env,
         T: Send + 'env,
     {
@@ -431,10 +431,10 @@ impl<'scope, 'env> ScopedThreadBuilder<'scope, 'env> {
             let handle = {
                 let closure = move || {
                     // Make sure the scope is inside the closure with the proper `'env` lifetime.
-                    let scope: Scope<'env> = scope;
+                    let scope: Arc<Scope<'env>> = Arc::new(scope);
 
                     // Run the closure.
-                    let res = f(&scope);
+                    let res = f(scope.clone());
 
                     // Store the result if the closure didn't panic.
                     *result.lock().unwrap() = Some(res);

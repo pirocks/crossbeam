@@ -4,6 +4,7 @@ use std::thread::sleep;
 use std::time::Duration;
 
 use crossbeam_utils::thread;
+use std::ops::Deref;
 
 const THREADS: usize = 10;
 const SMALL_STACK_SIZE: usize = 20;
@@ -145,7 +146,7 @@ fn nesting() {
 
             if depth > 0 {
                 scope.spawn(move |scope| {
-                    self.recurse(scope, depth - 1);
+                    self.recurse(scope.deref(), depth - 1);
                 });
             }
         }
@@ -156,7 +157,7 @@ fn nesting() {
     thread::scope(|scope| {
         scope.spawn(|scope| {
             scope.spawn(|scope| {
-                wrapper.recurse(scope, 5);
+                wrapper.recurse(scope.deref(), 5);
             });
         });
     })
