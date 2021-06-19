@@ -84,7 +84,7 @@
 //! tricky because argument `s` lives *inside* the invocation of `thread::scope()` and as such
 //! cannot be borrowed by scoped threads:
 //!
-//! ```compile_fail,E0373,E0521
+//! ```compile_fail
 //! use crossbeam_utils::thread;
 //!
 //! thread::scope(|s| {
@@ -147,25 +147,25 @@ type SharedOption<T> = Arc<Mutex<Option<T>>>;
 /// ```
 pub fn scope<'env, F, R>(f: F) -> thread::Result<R>
 where
-    F: FnOnce(&Scope<'env>) -> R,
+    F: FnOnce(Scope<'env>) -> R,
 {
     let wg = WaitGroup::new();
+    let handles = SharedVec::default();
     let scope = Scope::<'env> {
-        handles: SharedVec::default(),
+        handles: handles.clone(),
         wait_group: wg.clone(),
         _marker: PhantomData,
     };
 
     // Execute the scoped function, but catch any panics.
-    let result = panic::catch_unwind(panic::AssertUnwindSafe(|| f(&scope)));
+    let result = panic::catch_unwind(panic::AssertUnwindSafe(|| f(scope)));
 
     // Wait until all nested scopes are dropped.
-    drop(scope.wait_group);
+    // drop(scope.wait_group);
     wg.wait();
 
     // Join all remaining spawned threads.
-    let panics: Vec<_> = scope
-        .handles
+    let panics: Vec<_> = handles
         .lock()
         .unwrap()
         // Filter handles that haven't been joined, join them, and collect errors.
@@ -244,7 +244,7 @@ impl<'env> Scope<'env> {
     /// ```
     pub fn spawn<'scope, F, T>(&'scope self, f: F) -> ScopedJoinHandle<'scope, T>
     where
-        F: FnOnce(Arc<Scope<'env>>) -> T,
+        F: FnOnce(Scope<'env>) -> T,
         F: Send + 'env,
         T: Send + 'env,
     {
@@ -409,7 +409,7 @@ impl<'scope, 'env> ScopedThreadBuilder<'scope, 'env> {
     /// ```
     pub fn spawn<F, T>(self, f: F) -> io::Result<ScopedJoinHandle<'scope, T>>
     where
-        F: FnOnce(Arc<Scope<'env>>) -> T,
+        F: FnOnce(Scope<'env>) -> T,
         F: Send + 'env,
         T: Send + 'env,
     {
@@ -431,10 +431,10 @@ impl<'scope, 'env> ScopedThreadBuilder<'scope, 'env> {
             let handle = {
                 let closure = move || {
                     // Make sure the scope is inside the closure with the proper `'env` lifetime.
-                    let scope: Arc<Scope<'env>> = Arc::new(scope);
+                    let scope: Scope<'env> = scope;
 
                     // Run the closure.
-                    let res = f(scope.clone());
+                    let res = f(scope);
 
                     // Store the result if the closure didn't panic.
                     *result.lock().unwrap() = Some(res);
