@@ -1,11 +1,7 @@
 #!/bin/bash
-
+set -euxo pipefail
+IFS=$'\n\t'
 cd "$(dirname "$0")"/..
-set -ex
-
-if [[ ! -x "$(command -v cargo-hack)" ]]; then
-    cargo +stable install --debug cargo-hack || exit 1
-fi
 
 if [[ "$RUST_VERSION" != "nightly"* ]]; then
     # On MSRV, features other than nightly should work.

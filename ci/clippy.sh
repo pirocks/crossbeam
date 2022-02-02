@@ -1,8 +1,8 @@
 #!/bin/bash
-
+set -euxo pipefail
+IFS=$'\n\t'
 cd "$(dirname "$0")"/..
-set -ex
 
 rustup component add clippy
 
-cargo clippy --all
+cargo clippy --all --tests --examples
