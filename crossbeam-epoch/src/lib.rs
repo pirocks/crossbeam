@@ -62,7 +62,7 @@
     unreachable_pub
 )]
 #![cfg_attr(not(feature = "std"), no_std)]
-#![cfg_attr(feature = "nightly", feature(const_fn_trait_bound))]
+#![cfg_attr(miri, feature(strict_provenance_atomic_ptr))]
 
 #[cfg(crossbeam_loom)]
 extern crate loom_crate as loom;
@@ -78,19 +78,7 @@ mod primitive {
     pub(crate) mod sync {
         pub(crate) mod atomic {
             use core::sync::atomic::Ordering;
-            pub(crate) use loom::sync::atomic::AtomicUsize;
-            pub(crate) fn fence(ord: Ordering) {
-                if let Ordering::Acquire = ord {
-                } else {
-                    // FIXME: loom only supports acquire fences at the moment.
-                    // https://github.com/tokio-rs/loom/issues/117
-                    // let's at least not panic...
-                    // this may generate some false positives (`SeqCst` is stronger than `Acquire`
-                    // for example), and some false negatives (`Relaxed` is weaker than `Acquire`),
-                    // but it's the best we can do for the time being.
-                }
-                loom::sync::atomic::fence(Ordering::Acquire)
-            }
+            pub(crate) use loom::sync::atomic::{fence, AtomicPtr, AtomicUsize};
 
             // FIXME: loom does not support compiler_fence at the moment.
             // https://github.com/tokio-rs/loom/issues/117
@@ -101,7 +89,6 @@ mod primitive {
         }
         pub(crate) use loom::sync::Arc;
     }
-    pub(crate) use loom::lazy_static;
     pub(crate) use loom::thread_local;
 }
 #[cfg(not(crossbeam_no_atomic_cas))]
@@ -141,16 +128,13 @@ mod primitive {
         pub(crate) mod atomic {
             pub(crate) use core::sync::atomic::compiler_fence;
             pub(crate) use core::sync::atomic::fence;
-            pub(crate) use core::sync::atomic::AtomicUsize;
+            pub(crate) use core::sync::atomic::{AtomicPtr, AtomicUsize};
         }
         pub(crate) use alloc::sync::Arc;
     }
 
     #[cfg(feature = "std")]
     pub(crate) use std::thread_local;
-
-    #[cfg(feature = "std")]
-    pub(crate) use lazy_static::lazy_static;
 }
 
 #[cfg(not(crossbeam_no_atomic_cas))]
@@ -173,8 +157,9 @@ cfg_if! {
         pub use self::collector::{Collector, LocalHandle};
         pub use self::guard::{unprotected, Guard};
 
-        #[allow(deprecated)]
-        pub use self::atomic::{CompareAndSetError, CompareAndSetOrdering};
+        mod sealed {
+            pub trait Sealed {}
+        }
     }
 }
 

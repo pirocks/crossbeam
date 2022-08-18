@@ -8,7 +8,7 @@ https://github.com/crossbeam-rs/crossbeam/tree/master/crossbeam-channel#license)
 https://crates.io/crates/crossbeam-channel)
 [![Documentation](https://docs.rs/crossbeam-channel/badge.svg)](
 https://docs.rs/crossbeam-channel)
-[![Rust 1.36+](https://img.shields.io/badge/rust-1.36+-lightgray.svg)](
+[![Rust 1.38+](https://img.shields.io/badge/rust-1.38+-lightgray.svg)](
 https://www.rust-lang.org)
 [![chat](https://img.shields.io/discord/569610676205781012.svg?logo=discord)](https://discord.com/invite/JXYwgWZ)
 
@@ -25,15 +25,15 @@ Some highlights:
 * Channels use locks very sparingly for maximum [performance](benchmarks).
 
 [`std::sync::mpsc`]: https://doc.rust-lang.org/std/sync/mpsc/index.html
-[`Sender`]: https://docs.rs/crossbeam-channel/*/crossbeam_channel/struct.Sender.html
-[`Receiver`]: https://docs.rs/crossbeam-channel/*/crossbeam_channel/struct.Receiver.html
-[`bounded`]: https://docs.rs/crossbeam-channel/*/crossbeam_channel/fn.bounded.html
-[`unbounded`]: https://docs.rs/crossbeam-channel/*/crossbeam_channel/fn.unbounded.html
-[`after`]: https://docs.rs/crossbeam-channel/*/crossbeam_channel/fn.after.html
-[`never`]: https://docs.rs/crossbeam-channel/*/crossbeam_channel/fn.never.html
-[`tick`]: https://docs.rs/crossbeam-channel/*/crossbeam_channel/fn.tick.html
-[`select!`]: https://docs.rs/crossbeam-channel/*/crossbeam_channel/macro.select.html
-[`Select`]: https://docs.rs/crossbeam-channel/*/crossbeam_channel/struct.Select.html
+[`Sender`]: https://docs.rs/crossbeam-channel/latest/crossbeam_channel/struct.Sender.html
+[`Receiver`]: https://docs.rs/crossbeam-channel/latest/crossbeam_channel/struct.Receiver.html
+[`bounded`]: https://docs.rs/crossbeam-channel/latest/crossbeam_channel/fn.bounded.html
+[`unbounded`]: https://docs.rs/crossbeam-channel/latest/crossbeam_channel/fn.unbounded.html
+[`after`]: https://docs.rs/crossbeam-channel/latest/crossbeam_channel/fn.after.html
+[`never`]: https://docs.rs/crossbeam-channel/latest/crossbeam_channel/fn.never.html
+[`tick`]: https://docs.rs/crossbeam-channel/latest/crossbeam_channel/fn.tick.html
+[`select!`]: https://docs.rs/crossbeam-channel/latest/crossbeam_channel/macro.select.html
+[`Select`]: https://docs.rs/crossbeam-channel/latest/crossbeam_channel/struct.Select.html
 
 ## Usage
 
@@ -48,7 +48,7 @@ crossbeam-channel = "0.5"
 
 Crossbeam Channel supports stable Rust releases going back at least six months,
 and every time the minimum supported Rust version is increased, a new minor
-version is released. Currently, the minimum supported Rust version is 1.36.
+version is released. Currently, the minimum supported Rust version is 1.38.
 
 ## License
 

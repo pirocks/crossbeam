@@ -9,10 +9,6 @@ on:
       - crossbeam-[0-9]+.*
       - crossbeam-[a-z]+-[0-9]+.*
 
-env:
-  RUSTFLAGS: -Dwarnings
-  RUST_BACKTRACE: 1
-
 defaults:
   run:
     shell: bash
@@ -22,7 +18,7 @@ jobs:
     if: github.repository_owner == 'crossbeam-rs'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: taiki-e/create-gh-release-action@v1
         with:
           prefix: crossbeam(-[a-z]+)?
@@ -36,6 +32,7 @@ jobs:
       # TODO: Consider moving crossbeam crate to a subdirectory.
       - uses: taiki-e/create-gh-release-action@v1
         with:
+          prefix: crossbeam(-[a-z]+)?
           changelog: CHANGELOG.md
           title: crossbeam $version
           branch: master

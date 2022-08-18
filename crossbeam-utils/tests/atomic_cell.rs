@@ -286,6 +286,15 @@ macro_rules! test_arithmetic {
 
             assert_eq!(a.fetch_xor(2), 19);
             assert_eq!(a.load(), 17);
+
+            assert_eq!(a.fetch_max(18), 17);
+            assert_eq!(a.load(), 18);
+
+            assert_eq!(a.fetch_min(17), 18);
+            assert_eq!(a.load(), 17);
+
+            assert_eq!(a.fetch_nand(7), 17);
+            assert_eq!(a.load(), !(17 & 7));
         }
     };
 }
@@ -320,4 +329,52 @@ fn issue_748() {
     );
     let x = AtomicCell::new(Test::FieldLess);
     assert_eq!(x.load(), Test::FieldLess);
+}
+
+// https://github.com/crossbeam-rs/crossbeam/issues/833
+#[rustversion::since(1.40)] // const_constructor requires Rust 1.40
+#[test]
+fn issue_833() {
+    use std::num::NonZeroU128;
+    use std::sync::atomic::{AtomicBool, Ordering};
+    use std::thread;
+
+    #[cfg(miri)]
+    const N: usize = 10_000;
+    #[cfg(not(miri))]
+    const N: usize = 1_000_000;
+
+    #[allow(dead_code)]
+    enum Enum {
+        NeverConstructed,
+        Cell(AtomicCell<NonZeroU128>),
+    }
+
+    static STATIC: Enum = Enum::Cell(AtomicCell::new(match NonZeroU128::new(1) {
+        Some(nonzero) => nonzero,
+        None => unreachable!(),
+    }));
+    static FINISHED: AtomicBool = AtomicBool::new(false);
+
+    let handle = thread::spawn(|| {
+        let cell = match &STATIC {
+            Enum::NeverConstructed => unreachable!(),
+            Enum::Cell(cell) => cell,
+        };
+        let x = NonZeroU128::new(0xFFFF_FFFF_FFFF_FFFF_0000_0000_0000_0000).unwrap();
+        let y = NonZeroU128::new(0x0000_0000_0000_0000_FFFF_FFFF_FFFF_FFFF).unwrap();
+        while !FINISHED.load(Ordering::Relaxed) {
+            cell.store(x);
+            cell.store(y);
+        }
+    });
+
+    for _ in 0..N {
+        if let Enum::NeverConstructed = STATIC {
+            unreachable!(":(");
+        }
+    }
+
+    FINISHED.store(true, Ordering::Relaxed);
+    handle.join().unwrap();
 }

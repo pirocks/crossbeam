@@ -8,7 +8,7 @@ https://github.com/crossbeam-rs/crossbeam#license)
 https://crates.io/crates/crossbeam)
 [![Documentation](https://docs.rs/crossbeam/badge.svg)](
 https://docs.rs/crossbeam)
-[![Rust 1.36+](https://img.shields.io/badge/rust-1.36+-lightgray.svg)](
+[![Rust 1.38+](https://img.shields.io/badge/rust-1.38+-lightgray.svg)](
 https://www.rust-lang.org)
 [![chat](https://img.shields.io/discord/569610676205781012.svg?logo=discord)](https://discord.com/invite/JXYwgWZ)
 
@@ -46,19 +46,19 @@ This crate provides a set of tools for concurrent programming:
 *Features marked with <sup>(alloc)</sup> can be used in `no_std` environments, but only if `alloc`
 feature is enabled.*
 
-[`AtomicCell`]: https://docs.rs/crossbeam/*/crossbeam/atomic/struct.AtomicCell.html
-[`AtomicConsume`]: https://docs.rs/crossbeam/*/crossbeam/atomic/trait.AtomicConsume.html
-[`deque`]: https://docs.rs/crossbeam/*/crossbeam/deque/index.html
-[`ArrayQueue`]: https://docs.rs/crossbeam/*/crossbeam/queue/struct.ArrayQueue.html
-[`SegQueue`]: https://docs.rs/crossbeam/*/crossbeam/queue/struct.SegQueue.html
-[`channel`]: https://docs.rs/crossbeam/*/crossbeam/channel/index.html
-[`Parker`]: https://docs.rs/crossbeam/*/crossbeam/sync/struct.Parker.html
-[`ShardedLock`]: https://docs.rs/crossbeam/*/crossbeam/sync/struct.ShardedLock.html
-[`WaitGroup`]: https://docs.rs/crossbeam/*/crossbeam/sync/struct.WaitGroup.html
-[`epoch`]: https://docs.rs/crossbeam/*/crossbeam/epoch/index.html
-[`Backoff`]: https://docs.rs/crossbeam/*/crossbeam/utils/struct.Backoff.html
-[`CachePadded`]: https://docs.rs/crossbeam/*/crossbeam/utils/struct.CachePadded.html
-[`scope`]: https://docs.rs/crossbeam/*/crossbeam/fn.scope.html
+[`AtomicCell`]: https://docs.rs/crossbeam/latest/crossbeam/atomic/struct.AtomicCell.html
+[`AtomicConsume`]: https://docs.rs/crossbeam/latest/crossbeam/atomic/trait.AtomicConsume.html
+[`deque`]: https://docs.rs/crossbeam/latest/crossbeam/deque/index.html
+[`ArrayQueue`]: https://docs.rs/crossbeam/latest/crossbeam/queue/struct.ArrayQueue.html
+[`SegQueue`]: https://docs.rs/crossbeam/latest/crossbeam/queue/struct.SegQueue.html
+[`channel`]: https://docs.rs/crossbeam/latest/crossbeam/channel/index.html
+[`Parker`]: https://docs.rs/crossbeam/latest/crossbeam/sync/struct.Parker.html
+[`ShardedLock`]: https://docs.rs/crossbeam/latest/crossbeam/sync/struct.ShardedLock.html
+[`WaitGroup`]: https://docs.rs/crossbeam/latest/crossbeam/sync/struct.WaitGroup.html
+[`epoch`]: https://docs.rs/crossbeam/latest/crossbeam/epoch/index.html
+[`Backoff`]: https://docs.rs/crossbeam/latest/crossbeam/utils/struct.Backoff.html
+[`CachePadded`]: https://docs.rs/crossbeam/latest/crossbeam/utils/struct.CachePadded.html
+[`scope`]: https://docs.rs/crossbeam/latest/crossbeam/fn.scope.html
 
 ## Crates
 
@@ -94,7 +94,7 @@ crossbeam = "0.8"
 
 Crossbeam supports stable Rust releases going back at least six months,
 and every time the minimum supported Rust version is increased, a new minor
-version is released. Currently, the minimum supported Rust version is 1.36.
+version is released. Currently, the minimum supported Rust version is 1.38.
 
 ## Contributing
 
@@ -136,7 +136,7 @@ Crossbeam, but keep in mind that some of the written information is now out of d
 #### Conduct
 
 The Crossbeam project adheres to the
-[Rust Code of Conduct](https://github.com/rust-lang/rust/blob/master/CODE_OF_CONDUCT.md).
+[Rust Code of Conduct](https://www.rust-lang.org/policies/code-of-conduct).
 This describes the minimum behavior expected from all contributors.
 
 ## License

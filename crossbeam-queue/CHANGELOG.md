@@ -1,6 +1,18 @@
+# Version 0.3.6
+
+- Bump the minimum supported Rust version to 1.38. (#877)
+
+# Version 0.3.5
+
+- Add `ArrayQueue::force_push`. (#789)
+
+# Version 0.3.4
+
+- Implement `IntoIterator` for `ArrayQueue` and `SegQueue`. (#772)
+
 # Version 0.3.3
 
-- Fix stacked borrows violation in `ArrayQueue`. (#763)
+- Fix stacked borrows violation in `ArrayQueue` when `-Zmiri-tag-raw-pointers` is enabled. (#763)
 
 # Version 0.3.2
 

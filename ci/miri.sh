@@ -3,34 +3,42 @@ set -euxo pipefail
 IFS=$'\n\t'
 cd "$(dirname "$0")"/..
 
-MIRIFLAGS="-Zmiri-tag-raw-pointers" \
-    cargo miri test \
-        -p crossbeam-queue
+# We need 'ts' for the per-line timing
+sudo apt-get -y install moreutils
+echo
 
-# -Zmiri-tag-raw-pointers doesn't work with std::thread::Builder::name on Linux: https://github.com/rust-lang/miri/issues/1717
-MIRIFLAGS="-Zmiri-disable-isolation" \
+export RUSTFLAGS="${RUSTFLAGS:-} -Z randomize-layout"
+
+MIRIFLAGS="-Zmiri-strict-provenance -Zmiri-symbolic-alignment-check -Zmiri-disable-isolation" \
     cargo miri test \
-        -p crossbeam-utils
+    -p crossbeam-queue \
+    -p crossbeam-utils 2>&1 | ts -i '%.s  '
 
 # -Zmiri-ignore-leaks is needed because we use detached threads in tests/docs: https://github.com/rust-lang/miri/issues/1371
-MIRIFLAGS="-Zmiri-tag-raw-pointers -Zmiri-disable-isolation -Zmiri-ignore-leaks" \
+MIRIFLAGS="-Zmiri-strict-provenance -Zmiri-symbolic-alignment-check -Zmiri-disable-isolation -Zmiri-ignore-leaks" \
     cargo miri test \
-        -p crossbeam-channel
+    -p crossbeam-channel 2>&1 | ts -i '%.s  '
 
-# -Zmiri-ignore-leaks is needed for https://github.com/crossbeam-rs/crossbeam/issues/579
 # -Zmiri-disable-stacked-borrows is needed for https://github.com/crossbeam-rs/crossbeam/issues/545
-MIRIFLAGS="-Zmiri-disable-isolation -Zmiri-ignore-leaks -Zmiri-disable-stacked-borrows" \
+MIRIFLAGS="-Zmiri-strict-provenance -Zmiri-symbolic-alignment-check -Zmiri-disable-isolation -Zmiri-disable-stacked-borrows" \
     cargo miri test \
-        -p crossbeam-epoch \
-        -p crossbeam-skiplist
+    -p crossbeam-epoch 2>&1 | ts -i '%.s  '
 
-# -Zmiri-ignore-leaks is needed for https://github.com/crossbeam-rs/crossbeam/issues/579
+# -Zmiri-ignore-leaks is needed for https://github.com/crossbeam-rs/crossbeam/issues/614
 # -Zmiri-disable-stacked-borrows is needed for https://github.com/crossbeam-rs/crossbeam/issues/545
-MIRIFLAGS="-Zmiri-ignore-leaks -Zmiri-disable-stacked-borrows -Zmiri-compare-exchange-weak-failure-rate=1.0" \
+MIRIFLAGS="-Zmiri-strict-provenance -Zmiri-symbolic-alignment-check -Zmiri-disable-isolation -Zmiri-disable-stacked-borrows -Zmiri-ignore-leaks" \
     cargo miri test \
-        -p crossbeam-deque
+    -p crossbeam-skiplist 2>&1 | ts -i '%.s  '
 
-# -Zmiri-ignore-leaks is needed for https://github.com/crossbeam-rs/crossbeam/issues/579
-MIRIFLAGS="-Zmiri-ignore-leaks" \
+# -Zmiri-disable-stacked-borrows is needed for https://github.com/crossbeam-rs/crossbeam/issues/545
+# -Zmiri-compare-exchange-weak-failure-rate=0.0 is needed because some sequential tests (e.g.,
+# doctest of Stealer::steal) incorrectly assume that sequential weak CAS will never fail.
+# -Zmiri-preemption-rate=0 is needed because this code technically has UB and Miri catches that.
+MIRIFLAGS="-Zmiri-strict-provenance -Zmiri-symbolic-alignment-check -Zmiri-disable-stacked-borrows -Zmiri-compare-exchange-weak-failure-rate=0.0 -Zmiri-preemption-rate=0" \
     cargo miri test \
-        -p crossbeam
+    -p crossbeam-deque 2>&1 | ts -i '%.s  '
+
+# -Zmiri-disable-stacked-borrows is needed for https://github.com/crossbeam-rs/crossbeam/issues/545
+MIRIFLAGS="-Zmiri-strict-provenance -Zmiri-symbolic-alignment-check -Zmiri-disable-stacked-borrows" \
+    cargo miri test \
+    -p crossbeam 2>&1 | ts -i '%.s  '

@@ -13,8 +13,13 @@ on:
     - cron: '0 1 * * *'
 
 env:
-  RUSTFLAGS: -Dwarnings
+  CARGO_INCREMENTAL: 0
+  CARGO_NET_RETRY: 10
+  CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
+  RUSTDOCFLAGS: -D warnings
+  RUSTFLAGS: -D warnings
+  RUSTUP_MAX_RETRIES: 10
 
 defaults:
   run:
@@ -29,10 +34,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # aarch64/x86_64 macOS and aarch64 linux are tested on Cirrus CI
         include:
-          - rust: 1.36.0
+          - rust: '1.38'
             os: ubuntu-latest
-          - rust: 1.36.0
+          - rust: '1.38'
             os: windows-latest
           - rust: stable
             os: ubuntu-latest
@@ -40,27 +46,21 @@ jobs:
             os: windows-latest
           - rust: nightly
             os: ubuntu-latest
-          # TODO: https://github.com/crossbeam-rs/crossbeam/pull/518#issuecomment-633342606
-          # - rust: nightly
-          #   os: macos-latest
           - rust: nightly
             os: windows-latest
           - rust: nightly
             os: ubuntu-latest
             target: i686-unknown-linux-gnu
-          - rust: nightly
-            os: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
           # Test 32-bit target that does not have AtomicU64/AtomicI64.
           - rust: nightly
             os: ubuntu-latest
             target: mips-unknown-linux-gnu
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v2
-      - name: Install Rust
-        # --no-self-update is necessary because the windows environment cannot self-update rustup.exe.
-        run: rustup update ${{ matrix.rust }} --no-self-update && rustup default ${{ matrix.rust }}
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust }}
       - name: Install cross
         uses: taiki-e/install-action@cross
         if: matrix.target != ''
@@ -75,13 +75,14 @@ jobs:
       fail-fast: false
       matrix:
         rust:
-          - 1.36.0
+          - '1.38'
           - nightly
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Install Rust
-        run: rustup update ${{ matrix.rust }} && rustup default ${{ matrix.rust }}
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust }}
       - name: Install cargo-hack
         uses: taiki-e/install-action@cargo-hack
       - name: Check features
@@ -91,11 +92,12 @@ jobs:
   dependencies:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Install Rust
-        run: rustup update nightly && rustup default nightly
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@nightly
       - name: Install cargo-hack
         uses: taiki-e/install-action@cargo-hack
+      - name: Install cargo-minimal-versions
+        uses: taiki-e/install-action@cargo-minimal-versions
       - name: dependency tree check
         run: ./ci/dependencies.sh
 
@@ -106,12 +108,11 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v2
-      - name: Install Rust
-        run: rustup update nightly && rustup default nightly
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@nightly
       - run: ci/no_atomic.sh
       - run: git add -N . && git diff --exit-code
-        if: github.event_name != 'schedule' && !(github.event_name == 'push' && github.ref == 'refs/heads/main')
+        if: github.repository_owner != 'crossbeam-rs' || github.event_name != 'schedule'
       - id: diff
         run: |
           git config user.name "Taiki Endo"
@@ -122,7 +123,7 @@ jobs:
               git commit -m "Update no_atomic.rs"
               echo "::set-output name=success::false"
           fi
-        if: github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.repository_owner == 'crossbeam-rs' && github.event_name == 'schedule'
       - uses: taiki-e/create-pull-request@v3
         with:
           title: Update no_atomic.rs
@@ -131,17 +132,16 @@ jobs:
             [Please close and immediately reopen this pull request to run CI.][2]
 
             [1]: https://github.com/peter-evans/create-pull-request
-            [2]: https://github.com/peter-evans/create-pull-request/blob/main/docs/concepts-guidelines.md#workarounds-to-trigger-further-workflow-runs
-          branch: update-no-atomic-sh
-        if: (github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main') && steps.diff.outputs.success == 'false'
+            [2]: https://github.com/peter-evans/create-pull-request/blob/HEAD/docs/concepts-guidelines.md#workarounds-to-trigger-further-workflow-runs
+          branch: update-no-atomic-rs
+        if: github.repository_owner == 'crossbeam-rs' && github.event_name == 'schedule' && steps.diff.outputs.success == 'false'
 
   # Check formatting.
   rustfmt:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Install Rust
-        run: rustup update stable
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
       - name: rustfmt
         run: ./ci/rustfmt.sh
 
@@ -149,9 +149,8 @@ jobs:
   clippy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Install Rust
-        run: rustup update stable
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
       - name: clippy
         run: ./ci/clippy.sh
 
@@ -159,9 +158,8 @@ jobs:
   miri:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Install Rust
-        run: rustup toolchain install nightly --component miri && rustup default nightly
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@miri
       - name: miri
         run: ./ci/miri.sh
 
@@ -169,9 +167,8 @@ jobs:
   san:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Install Rust
-        run: rustup update nightly && rustup default nightly
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@nightly
       - name: Run sanitizers
         run: ./ci/san.sh
 
@@ -179,9 +176,8 @@ jobs:
   loom:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Install Rust
-        run: rustup update stable
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
       - name: loom
         run: ./ci/crossbeam-epoch-loom.sh
 
@@ -189,16 +185,15 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Install Rust
-        run: rustup update nightly && rustup default nightly
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@nightly
       - name: docs
         run: ./ci/docs.sh
 
   shellcheck:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install shellcheck
         uses: taiki-e/install-action@shellcheck
       - run: shellcheck $(git ls-files '*.sh')
@@ -223,6 +218,7 @@ jobs:
       - san
       - loom
       - docs
+      - shellcheck
     runs-on: ubuntu-latest
     steps:
       - name: Mark the job as a success

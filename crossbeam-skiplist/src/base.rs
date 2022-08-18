@@ -99,7 +99,7 @@ impl<K, V> Node<K, V> {
     /// why this function is unsafe.
     unsafe fn alloc(height: usize, ref_count: usize) -> *mut Self {
         let layout = Self::get_layout(height);
-        let ptr = alloc(layout) as *mut Self;
+        let ptr = alloc(layout).cast::<Self>();
         if ptr.is_null() {
             handle_alloc_error(layout);
         }
@@ -118,7 +118,7 @@ impl<K, V> Node<K, V> {
     unsafe fn dealloc(ptr: *mut Self) {
         let height = (*ptr).height();
         let layout = Self::get_layout(height);
-        dealloc(ptr as *mut u8, layout);
+        dealloc(ptr.cast::<u8>(), layout);
     }
 
     /// Returns the layout of a node with the given `height`.
@@ -1042,7 +1042,7 @@ where
                     }
 
                     // Installation failed. Decrement the reference count.
-                    (*n).refs_and_height
+                    n.refs_and_height
                         .fetch_sub(1 << HEIGHT_BITS, Ordering::Relaxed);
 
                     // We don't have the most up-to-date search results. Repeat the search.

@@ -61,6 +61,8 @@ fn spsc() {
                         assert_eq!(i, v);
                         break;
                     }
+                    #[cfg(miri)]
+                    std::hint::spin_loop();
                 }
             }
 
@@ -102,6 +104,8 @@ fn mpmc() {
                             v[n].fetch_add(1, SeqCst);
                             break;
                         }
+                        #[cfg(miri)]
+                        std::hint::spin_loop();
                     }
                 }
             });
@@ -280,11 +284,19 @@ fn no_starvation() {
     .unwrap();
 }
 
-#[cfg_attr(miri, ignore)] // Miri is too slow
 #[test]
 fn destructors() {
+    #[cfg(miri)]
+    const THREADS: usize = 2;
+    #[cfg(not(miri))]
     const THREADS: usize = 8;
+    #[cfg(miri)]
+    const COUNT: usize = 500;
+    #[cfg(not(miri))]
     const COUNT: usize = 50_000;
+    #[cfg(miri)]
+    const STEPS: usize = 100;
+    #[cfg(not(miri))]
     const STEPS: usize = 1000;
 
     struct Elem(usize, Arc<Mutex<Vec<usize>>>);
